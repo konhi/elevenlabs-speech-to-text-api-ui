@@ -1,11 +1,12 @@
 import { serve } from "bun";
 import index from "./index.html";
 
+const appRoutes = {
+  "/*": index,
+};
+
 const server = serve({
-  routes: {
-    // AI: Serve index.html for all routes
-    "/*": index,
-  },
+  routes: appRoutes,
 
   development: process.env.NODE_ENV !== "production" && {
     // Enable browser hot reloading in development
