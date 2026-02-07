@@ -363,11 +363,8 @@ function TranscriptViewerScrubBar({
 export {
   TranscriptViewerContainer,
   TranscriptViewerWords,
-  TranscriptViewerWord,
   TranscriptViewerAudio,
   TranscriptViewerPlayPauseButton,
   TranscriptViewerScrubBar,
-  TranscriptViewerProvider,
-  useTranscriptViewerContext,
 };
 export type { CharacterAlignmentResponseModel };

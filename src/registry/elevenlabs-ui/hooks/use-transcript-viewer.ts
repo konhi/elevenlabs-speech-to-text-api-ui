@@ -108,9 +108,9 @@ function composeSegments(
       }
     }
 
-    if (/\s/.test(char)) {
+    if (/\s/.test(char || "")) {
       flushWord();
-      whitespaceBuffer += char;
+      whitespaceBuffer += char || "";
       continue;
     }
 
@@ -119,11 +119,11 @@ function composeSegments(
     }
 
     if (!wordBuffer) {
-      wordBuffer = char;
+      wordBuffer = char || "";
       wordStart = start;
       wordEnd = end;
     } else {
-      wordBuffer += char;
+      wordBuffer += char || "";
       wordEnd = end;
     }
   }
@@ -155,7 +155,7 @@ type UseTranscriptViewerResult = {
   currentWordIndex: number;
   seekToTime: (time: number) => void;
   seekToWord: (word: number | TranscriptWord) => void;
-  audioRef: RefObject<HTMLAudioElement>;
+  audioRef: RefObject<HTMLAudioElement | null>;
   isPlaying: boolean;
   isScrubbing: boolean;
   duration: number;
@@ -202,7 +202,7 @@ function useTranscriptViewer({
     }
     if (words.length) {
       const lastWord = words[words.length - 1];
-      return Number.isFinite(lastWord.endTime) ? lastWord.endTime : 0;
+      return lastWord && Number.isFinite(lastWord.endTime) ? lastWord.endTime : 0;
     }
     return 0;
   }, [alignment, words]);
@@ -213,7 +213,7 @@ function useTranscriptViewer({
 
   useEffect(() => {
     setCurrentTime(0);
-    setDuration(guessedDuration);
+    setDuration(guessedDuration || 0);
     setIsPlaying(false);
     setCurrentWordIndex(words.length ? 0 : -1);
   }, [words.length, alignment, guessedDuration]);
@@ -227,6 +227,7 @@ function useTranscriptViewer({
       while (lo <= hi) {
         const mid = Math.floor((lo + hi) / 2);
         const word = words[mid];
+        if (!word) break;
         if (time >= word.startTime && time < word.endTime) {
           answer = mid;
           break;
@@ -264,12 +265,14 @@ function useTranscriptViewer({
       ) {
         while (
           next + 1 < words.length &&
-          currentTime >= words[next + 1].startTime
+          words[next + 1] &&
+          currentTime >= (words[next + 1]?.startTime || 0)
         ) {
           next++;
         }
         // AI: If we're inside the next word's window, pick it.
-        if (currentTime < words[next].endTime) {
+        const nextWord = words[next];
+        if (nextWord && currentTime < nextWord.endTime) {
           setCurrentWordIndex(next);
           return;
         }
@@ -469,7 +472,7 @@ function useTranscriptViewer({
 
   const currentWord =
     currentWordIndex >= 0 && currentWordIndex < words.length
-      ? words[currentWordIndex]
+      ? words[currentWordIndex] || null
       : null;
   const currentSegmentIndex = currentWord?.segmentIndex ?? -1;
 
@@ -509,12 +512,8 @@ function useTranscriptViewer({
 
 export { useTranscriptViewer };
 export type {
-  UseTranscriptViewerProps,
   UseTranscriptViewerResult,
-  ComposeSegmentsOptions,
-  ComposeSegmentsResult,
   SegmentComposer,
   TranscriptSegment,
   TranscriptWord,
-  CharacterAlignmentResponseModel,
 };
